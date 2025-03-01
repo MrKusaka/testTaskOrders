@@ -1,9 +1,9 @@
 import aio_pika
 
 from datetime import datetime
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from typing import Annotated
-from sqlalchemy import insert
+from sqlalchemy import insert, select
 from slugify import slugify
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,14 +30,14 @@ async def send_to_queue(order_id: int):
 
 @router.post("/orders/")
 async def create_order(db: Annotated[AsyncSession, Depends(get_db)], create_order: CreateOrder):
+    '''Метод создания заказа'''
     # Создаем заказ в бд и сразу возвращаем айди заказа для передачи в очередь
     new_order = await db.execute(insert(Orders).values(name=create_order.name,
                                                        description=create_order.description,
                                                        price=create_order.price,
-                                                       status=create_order.status,
+                                                       status="NEW",
                                                        quantity=create_order.quantity,
-                                                       created_at=datetime.now(),
-                                                       slug=slugify(create_order.name)).returning(Orders.id))
+                                                       created_at=datetime.now()).returning(Orders.id))
     await db.commit()
 
     # Отправляем сообщение в RabbitMQ
@@ -50,21 +50,21 @@ async def create_order(db: Annotated[AsyncSession, Depends(get_db)], create_orde
 
 
 @router.get('/all_orders')
-async def get_all_orders():
-    pass
+async def get_all_orders(db: Annotated[AsyncSession, Depends(get_db)]):
+    '''Метод по получению всех заказов'''
+    orders = await db.scalars(select(Orders).where(Orders.is_active == True))
+    return orders.all()
 
 
 @router.get('/order')
-async def get_order():
-    pass
+async def get_order(db: Annotated[AsyncSession, Depends(get_db)], order_id: int):
+    '''Метод по получению определенного заказа по его ID'''
+    order = await db.scalar(
+        select(Orders).where(Orders.id == order_id, Orders.is_active == True))
+    if order is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Нет заказа с таким ID'
+        )
 
-#
-#
-# @router.put('/update_order')
-# async def update_order():
-#     pass
-#
-#
-# @router.delete('/delete_order')
-# async def delete_order():
-#     pass
+    return order

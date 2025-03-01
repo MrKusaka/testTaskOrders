@@ -7,5 +7,5 @@ class CreateOrder(BaseModel):
     price: int
     image_url: str
     quantity: int
-    status: str
+    # status: str
 
