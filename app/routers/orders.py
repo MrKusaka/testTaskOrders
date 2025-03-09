@@ -1,3 +1,5 @@
+import configparser
+
 import aio_pika
 
 from datetime import datetime
@@ -14,8 +16,10 @@ from app.models.orders import Orders
 
 router = APIRouter(prefix='/orders', tags=['order'])
 
-RABBITMQ_URL = "amqp://guest:guest@localhost/"
-QUEUE_NAME = "order_queue"
+config = configparser.ConfigParser()
+config.read_file(open('C:\\Users\\wow_l\\PycharmProjects\\testTaskOrders\\config.ini'))
+RABBITMQ_URL = config.get('rabbitmq', 'RABBITMQ_URL')
+QUEUE_NAME = config.get('rabbitmq', 'QUEUE_NAME')
 
 
 async def send_to_queue(order_id: int):
@@ -28,7 +32,7 @@ async def send_to_queue(order_id: int):
         )
 
 
-@router.post("/orders/")
+@router.post("/create_order")
 async def create_order(db: Annotated[AsyncSession, Depends(get_db)], create_order: CreateOrder):
     '''Метод создания заказа'''
     # Создаем заказ в бд и сразу возвращаем айди заказа для передачи в очередь

@@ -2,18 +2,17 @@ import asyncio
 import configparser
 
 from aio_pika import connect, IncomingMessage
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy import update
 from app.models.orders import Orders
 
 
 #
-RABBITMQ_URL = "amqp://guest:guest@localhost/"
-QUEUE_NAME = "order_queue"
-
-
 config = configparser.ConfigParser()
 config.read_file(open('C:\\Users\\wow_l\\PycharmProjects\\testTaskOrders\\config.ini'))
+RABBITMQ_URL = config.get('rabbitmq', 'RABBITMQ_URL')
+QUEUE_NAME = config.get('rabbitmq', 'QUEUE_NAME')
 
 
 engine = create_async_engine(config.get('postgres', 'db'), echo=True)
@@ -33,7 +32,7 @@ async def process_message(message: IncomingMessage):
     async with message.process():
         print(f"Заказ №{message.body.decode()} поступил на обработку")
         # Имитация обработки заказа, приостанавливаем на n секунд
-        await asyncio.sleep(20) # 20 секунд
+        await asyncio.sleep(2) # 20 секунд
         order_id = int(message.body.decode())
 
         # Обновление статуса заказа в базе данных
@@ -41,6 +40,7 @@ async def process_message(message: IncomingMessage):
         async with async_session_maker() as session:
             async with session.begin():
                 order_name = await session.get(Orders, order_id)
+
 
         print(f"Статус заказа №{order_id} {order_name.name} обновлен на PROCESSED")
 
@@ -51,7 +51,6 @@ async def worker():
     async with connection:
         channel = await connection.channel()
         queue = await channel.declare_queue(QUEUE_NAME, durable=True)
-
         print(f"Подписка на очередь {QUEUE_NAME}...")
         await queue.consume(process_message)
 
