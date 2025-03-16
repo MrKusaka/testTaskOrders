@@ -10,7 +10,7 @@ from app.models.orders import Orders
 
 #
 config = configparser.ConfigParser()
-config.read_file(open('C:\\Users\\wow_l\\PycharmProjects\\testTaskOrders\\config.ini'))
+config.read_file(open('config.ini'))
 RABBITMQ_URL = config.get('rabbitmq', 'RABBITMQ_URL')
 QUEUE_NAME = config.get('rabbitmq', 'QUEUE_NAME')
 

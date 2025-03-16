@@ -1,3 +1,4 @@
+import uvicorn
 from fastapi import FastAPI, Request
 from app.routers import orders
 from loguru import logger
@@ -27,3 +28,7 @@ async def log_middleware(request: Request, call_next):
 
 
 app.include_router(orders.router)
+
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)

@@ -17,4 +17,4 @@ class Orders(Base):
     # slug = Column(String, unique=True, index=True)
 
 from sqlalchemy.schema import CreateTable
-print(CreateTable(Orders.__table__))
+# print(CreateTable(Orders.__table__))
