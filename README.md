@@ -76,7 +76,7 @@ QUEUE_NAME = order_queue
 
 ## Запуск локально без Docker
 
-В этом случае требуется изначально установить локально и запустить rabbitmq и postgres
+В этом случае требуется изначально установить локально и запустить [rabbitmq](https://www.rabbitmq.com/docs/download) и [postgres](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads), создать базы
 
 1. Клонируйте репозиторий:
 
