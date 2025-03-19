@@ -2,13 +2,11 @@ import asyncio
 import configparser
 
 from aio_pika import connect, IncomingMessage
-from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy import update
 from app.models.orders import Orders
 
 
-#
 config = configparser.ConfigParser()
 config.read_file(open('config.ini'))
 RABBITMQ_URL = config.get('rabbitmq', 'RABBITMQ_URL')
@@ -32,7 +30,7 @@ async def process_message(message: IncomingMessage):
     async with message.process():
         print(f"Заказ №{message.body.decode()} поступил на обработку")
         # Имитация обработки заказа, приостанавливаем на n секунд
-        await asyncio.sleep(2) # 20 секунд
+        await asyncio.sleep(20) # 20 секунд
         order_id = int(message.body.decode())
 
         # Обновление статуса заказа в базе данных
@@ -40,8 +38,6 @@ async def process_message(message: IncomingMessage):
         async with async_session_maker() as session:
             async with session.begin():
                 order_name = await session.get(Orders, order_id)
-
-
         print(f"Статус заказа №{order_id} {order_name.name} обновлен на PROCESSED")
 
 
@@ -60,4 +56,3 @@ async def worker():
 
 if __name__ == "__main__":
     asyncio.run(worker())
-
